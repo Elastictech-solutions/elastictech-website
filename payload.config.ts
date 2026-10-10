@@ -13,6 +13,7 @@ import { Testimonials } from './src/collections/Testimonials'
 import { Users } from './src/collections/Users'
 import { Inquiries } from './src/collections/Inquiries'
 import { SiteSettings } from './src/globals/SiteSettings'
+import { migrations } from './src/migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -31,6 +32,7 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || '',
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || 'postgres://elastictech:elastictech@localhost:5432/elastictech' },
+    prodMigrations: migrations,
   }),
   sharp,
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

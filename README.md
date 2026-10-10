@@ -31,7 +31,7 @@ The VPS needs Docker Engine and the Docker Compose plugin. Point the chosen doma
 
 1. Clone this repository on the VPS and enter its directory.
 2. Create `.env` from `.env.example`. Set `DOMAIN` to the public hostname and replace both secrets with unique values from `openssl rand -hex 32`. Do not commit `.env`.
-3. Build and start the services:
+3. Build and start the services. The included database migrations create the CMS tables automatically on the first production connection:
 
    ```sh
    docker compose up -d --build
