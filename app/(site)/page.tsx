@@ -6,6 +6,12 @@ import { ContactForm } from '@/components/ContactForm'
 
 export const dynamic = 'force-dynamic'
 
+export async function generateMetadata() {
+  const { pages } = await getHomeContent()
+  const home = pages.find((page: any) => page.slug === 'home')
+  return { alternates: { canonical: '/' }, ...(home?.seoTitle ? { title: home.seoTitle } : {}), ...(home?.seoDescription ? { description: home.seoDescription } : {}) }
+}
+
 const serviceFallback: [string, string][] = [
   ['Infrastructure', 'Servers, LAN / WAN connectivity, network monitoring and reliable day-to-day support.'],
   ['Cloud management', 'Practical cloud management that keeps your systems available, organized and ready to scale.'],
