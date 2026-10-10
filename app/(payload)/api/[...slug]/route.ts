@@ -4,9 +4,10 @@ import { REST_DELETE, REST_GET, REST_OPTIONS, REST_PATCH, REST_POST, REST_PUT } 
 export const GET = REST_GET(config)
 const post = REST_POST(config)
 // Provision the first administrator only with the private create-admin command.
-export const POST: typeof post = (request, context) => {
-  if (new URL(request.url).pathname.replace(/\/+$/, '') === '/api/users/first-register') {
-    return Promise.resolve(Response.json({ error: 'Administrator provisioning is disabled on the public API.' }, { status: 403 }))
+export const POST: typeof post = async (request, context) => {
+  const { slug = [] } = await context.params
+  if (slug[0] === 'users' && slug[1] === 'first-register') {
+    return Response.json({ error: 'Administrator provisioning is disabled on the public API.' }, { status: 403 })
   }
   return post(request, context)
 }
