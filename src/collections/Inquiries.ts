@@ -4,7 +4,7 @@ export const Inquiries: CollectionConfig = {
   slug: 'inquiries',
   admin: { useAsTitle: 'name', defaultColumns: ['name', 'email', 'subject', 'createdAt'] },
   access: {
-    create: () => true,
+    create: () => false,
     read: ({ req }) => req.user?.role === 'admin' || req.user?.role === 'editor',
     update: ({ req }) => req.user?.role === 'admin' || req.user?.role === 'editor',
     delete: ({ req }) => req.user?.role === 'admin',

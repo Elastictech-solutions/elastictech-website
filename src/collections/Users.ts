@@ -3,7 +3,10 @@ import { isAdmin } from '../lib/access'
 
 export const Users: CollectionConfig = {
   slug: 'users',
-  auth: true,
+  auth: {
+    maxLoginAttempts: 5, lockTime: 15 * 60 * 1000, tokenExpiration: 2 * 60 * 60,
+    cookies: { secure: process.env.NODE_ENV === 'production', sameSite: 'Lax' },
+  },
   admin: { useAsTitle: 'email', defaultColumns: ['email', 'name', 'role'] },
   access: {
     admin: ({ req }) => Boolean(req.user),
