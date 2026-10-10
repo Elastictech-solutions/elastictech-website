@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+media/
+.env
+.env.*
+!.env.example
+payload-types.ts
+*.log
+.DS_Store
