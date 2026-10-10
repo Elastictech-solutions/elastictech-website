@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 async function getProject(slug: string) {
   try {
     const payload = await getPayload({ config })
-    const result = await payload.find({ collection: 'projects', where: { and: [{ slug: { equals: slug } }, { _status: { equals: 'published' } }] }, depth: 2, limit: 1 })
+    const result = await payload.find({ overrideAccess: false, collection: 'projects', where: { and: [{ slug: { equals: slug } }, { _status: { equals: 'published' } }] }, depth: 2, limit: 1 })
     return result.docs[0] as any
   } catch { return null }
 }
@@ -19,7 +19,7 @@ async function getProject(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const project = await getProject(slug)
-  return project ? { title: project.title, description: project.seoDescription || project.summary } : { title: 'Project' }
+  return project ? { alternates: { canonical: `/projects/${encodeURIComponent(slug)}` }, title: project.title, description: project.seoDescription || project.summary } : { title: 'Project' }
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
