@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getHomeContent } from '@/lib/content'
 
-export const metadata: Metadata = { title: 'Projects', description: 'Selected ICT infrastructure, security, network and digital solutions work by ElasticTech Solutions.' }
+export const metadata: Metadata = { alternates: { canonical: '/projects' }, title: 'Projects', description: 'Selected ICT infrastructure, security, network and digital solutions work by ElasticTech Solutions.' }
 export const dynamic = 'force-dynamic'
 
 export default async function ProjectsPage() {
