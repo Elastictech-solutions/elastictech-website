@@ -17,6 +17,7 @@ import { migrations } from './src/migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+const publicOrigin = process.env.NEXT_PUBLIC_SERVER_URL ? new URL(process.env.NEXT_PUBLIC_SERVER_URL).origin : 'http://localhost:3000'
 
 export default buildConfig({
   admin: {
@@ -25,7 +26,12 @@ export default buildConfig({
       titleSuffix: '— ElasticTech CMS',
     },
   },
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL,
+  serverURL: publicOrigin,
+  cors: [publicOrigin],
+  csrf: [publicOrigin],
+  maxDepth: 3,
+  graphQL: { disable: true },
+  upload: { limits: { fileSize: 5 * 1024 * 1024 }, abortOnLimit: true },
   editor: lexicalEditor(),
   collections: [Users, Pages, Projects, Services, Products, Testimonials, Media, Inquiries],
   globals: [SiteSettings],
