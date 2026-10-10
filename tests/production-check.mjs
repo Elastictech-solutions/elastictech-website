@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict'
+const base = process.env.CHECK_URL || 'http://127.0.0.1:3001'
+const origin = process.env.CHECK_ORIGIN || 'http://localhost:3001'
+const robots = await fetch(base + '/robots.txt')
+const rules = await robots.text()
+assert.equal(robots.status, 200)
+assert.ok(rules.includes('Sitemap: ' + origin + '/sitemap.xml'))
+assert.match(rules, /Disallow: \/admin/)
+assert.match(rules, /OAI-SearchBot/)
+const home = await fetch(base + '/')
+const html = await home.text()
+assert.equal(home.status, 200)
+assert.equal(home.headers.get('x-content-type-options'), 'nosniff')
+const nonce = home.headers.get('content-security-policy')?.match(/nonce-([^']+)/)?.[1]
+assert.ok(nonce)
+assert.ok(html.includes('nonce="' + nonce + '"'))
+assert.match(html, /application\/ld\+json/)
+assert.equal(home.headers.get('x-powered-by'), null)
+const blocked = await fetch(base + '/api/users/first-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+assert.equal(blocked.status, 403)
+assert.match(blocked.headers.get('x-robots-tag') || '', /noindex/)
+const cross = await fetch(base + '/api/public-inquiry', { method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: '{}' })
+assert.equal(cross.status, 403)
+const big = await fetch(base + '/api/public-inquiry', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'x'.repeat(20000) }) })
+assert.equal(big.status, 413)
+console.log('Passed live checks: crawler rules, CSP nonce, JSON-LD, headers, blocked public provisioning, cross-origin requests and oversized messages.')
