@@ -1,37 +1,36 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { NextResponse } from 'next/server'
+import { boundedJson, BodyTooLarge, createLimiter } from '@/lib/request-security'
+import { siteOrigin } from '@/lib/seo'
 
-const windows = new Map<string, { count: number; started: number }>()
+const allowRequest = createLimiter()
+const reply = (data: object, status: number, extra: Record<string, string> = {}) => NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store', ...extra } })
 
 export async function POST(request: Request) {
-  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const now = Date.now()
-  const current = windows.get(forwardedFor)
-  if (current && now - current.started < 10 * 60 * 1000 && current.count >= 5) {
-    return NextResponse.json({ error: 'Please wait before sending another message.' }, { status: 429 })
-  }
-  if (!current || now - current.started >= 10 * 60 * 1000) windows.set(forwardedFor, { count: 1, started: now })
-  else current.count += 1
+  if (request.headers.get('origin') !== siteOrigin()) return reply({ error: 'Request origin is not allowed.' }, 403)
+  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return reply({ error: 'Send a JSON request.' }, 415)
+  // Caddy overwrites this header with the actual peer IP. The app has no public port.
+  const key = request.headers.get('x-client-ip')?.slice(0, 64) || 'unknown'
+  if (!allowRequest(key)) return reply({ error: 'Please wait before sending another message.' }, 429, { 'Retry-After': '600' })
 
+  let data: Record<string, unknown>
+  try { data = await boundedJson(request) }
+  catch (error) { return reply({ error: error instanceof BodyTooLarge ? 'Message is too large.' : 'Invalid message.' }, error instanceof BodyTooLarge ? 413 : 400) }
+  if (typeof data.website === 'string' && data.website.trim()) return reply({ success: true }, 200)
+  const limits = { name: 120, email: 180, subject: 160, message: 4000, phone: 40 }
+  const clean: Record<string, string> = {}
+  for (const [field, limit] of Object.entries(limits)) {
+    const value = data[field]
+    if (value !== undefined && typeof value !== 'string') return reply({ error: 'Invalid field value.' }, 400)
+    clean[field] = typeof value === 'string' ? value.trim() : ''
+    if (clean[field].length > limit) return reply({ error: 'One or more fields are too long.' }, 400)
+  }
+  const { name, email, subject, message, phone } = clean
+  if (!name || !subject || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply({ error: 'Please complete the required fields.' }, 400)
   try {
-    const data = await request.json()
-    if (typeof data.website === 'string' && data.website.trim()) return NextResponse.json({ success: true })
-    const name = String(data.name || '').trim()
-    const email = String(data.email || '').trim()
-    const subject = String(data.subject || '').trim()
-    const message = String(data.message || '').trim()
-    const phone = String(data.phone || '').trim()
-    if (!name || !subject || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Please complete the required fields.' }, { status: 400 })
-    }
-    if (name.length > 120 || email.length > 180 || subject.length > 160 || message.length > 4000 || phone.length > 40) {
-      return NextResponse.json({ error: 'One or more fields are too long.' }, { status: 400 })
-    }
     const payload = await getPayload({ config })
     await payload.create({ collection: 'inquiries', overrideAccess: true, data: { name, email, phone, subject, message, status: 'new' } })
-    return NextResponse.json({ success: true }, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: 'Unable to save your message right now.' }, { status: 500 })
-  }
+    return reply({ success: true }, 201)
+  } catch { return reply({ error: 'Unable to save your message right now.' }, 500) }
 }
