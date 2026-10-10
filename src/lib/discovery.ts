@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 
 type PublicEntry = { slug: string; title: string; summary: string; updatedAt: string }
 function entries(docs: Record<string, unknown>[]): PublicEntry[] {
-  return docs.filter((doc) => typeof doc.slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(doc.slug) && typeof doc.title === 'string' && typeof doc.summary === 'string' && typeof doc.updatedAt === 'string').map((doc) => ({ slug: doc.slug as string, title: doc.title as string, summary: doc.summary as string, updatedAt: doc.updatedAt as string }))
+  return docs.filter((doc) => typeof doc.slug === 'string' && doc.slug.length > 0 && !['.', '..'].includes(doc.slug) && typeof doc.title === 'string' && typeof doc.summary === 'string' && typeof doc.updatedAt === 'string').map((doc) => ({ slug: doc.slug as string, title: doc.title as string, summary: doc.summary as string, updatedAt: doc.updatedAt as string }))
 }
 
 // Use anonymous access rules even when a visitor has a CMS session.
