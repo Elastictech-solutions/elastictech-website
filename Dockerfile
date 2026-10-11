@@ -10,7 +10,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable && corepack prepare pnpm@11.25.0 --activate
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+RUN PGHOST=database PGPASSWORD=build-only-unused pnpm run build
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app

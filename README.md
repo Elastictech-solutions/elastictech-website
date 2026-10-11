@@ -88,3 +88,11 @@ Media uploads are public website assets. Upload only material approved for publi
 The contact throttle resets on restart and applies per app process. For multiple replicas or stronger flood protection, add a shared rate limiter at your proxy/firewall. Password recovery email delivery needs a configured mail adapter; without one, use administrator account management. Keep dependencies and VPS packages updated and test restore procedures. These controls reduce specific risks; they are not a guarantee against every exploit.
 
 Run the focused security checks with `node --import tsx --test tests/security.test.ts` and build with `pnpm build`. Validate CMS login, drafts, media and inquiries against PostgreSQL on the deployed server; the local source build does not perform a penetration test.
+
+## Fixing an Invalid URL database error
+
+Docker Compose passes the existing `POSTGRES_PASSWORD` to the application as `PGPASSWORD` alongside `PGHOST`, `PGPORT`, `PGUSER` and `PGDATABASE`. This avoids placing passwords directly in a URL. Reserved characters such as `@`, `#`, `/`, `%` and `?` do not require URL encoding with these separate fields.
+
+If upgrading from the earlier configuration, pull the latest source and rebuild the app with `docker compose up -d --build app`, then retry your administrator creation command. Keep the existing database password and data volumes. Changing `POSTGRES_PASSWORD` alone does not change the password of an already initialized PostgreSQL database.
+
+For external databases configured with `DATABASE_URL`, supply a valid `postgres://` or `postgresql://` connection URL and percent-encode credentials. When `PGHOST` is set, the separate fields take precedence. Invalid URLs are rejected with an error that omits the URL and credentials. Never paste your password or full connection string into support messages.

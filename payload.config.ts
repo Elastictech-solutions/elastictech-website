@@ -14,6 +14,7 @@ import { Users } from './src/collections/Users'
 import { Inquiries } from './src/collections/Inquiries'
 import { SiteSettings } from './src/globals/SiteSettings'
 import { migrations } from './src/migrations'
+import { databasePool } from './src/lib/database'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -37,7 +38,7 @@ export default buildConfig({
   globals: [SiteSettings],
   secret: process.env.PAYLOAD_SECRET || '',
   db: postgresAdapter({
-    pool: { connectionString: process.env.DATABASE_URL || 'postgres://elastictech:elastictech@localhost:5432/elastictech' },
+    pool: databasePool(),
     prodMigrations: migrations,
   }),
   sharp,

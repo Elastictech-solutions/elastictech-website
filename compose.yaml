@@ -21,7 +21,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
-      DATABASE_URL: postgres://elastictech:${POSTGRES_PASSWORD}@database:5432/elastictech
+      PGHOST: database
+      PGPORT: "5432"
+      PGUSER: elastictech
+      PGDATABASE: elastictech
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       NEXT_PUBLIC_SERVER_URL: https://${DOMAIN}
     volumes:
       - media-data:/app/media
